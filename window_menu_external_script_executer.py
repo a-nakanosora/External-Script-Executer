@@ -1,7 +1,7 @@
 bl_info = {
     "name": "External Script Executer",
     "author": "a nakanosora",
-    "version": (0, 1, 2),
+    "version": (0, 2, 0),
     "blender": (2, 72, 2),
     "location": "Key Input -> Window -> External Script Executer (default: Shift+Ctrl+W)",
     "warning": "",
@@ -25,6 +25,41 @@ def get_external_scripts(dir_root):
                            ,  os.listdir(dir_root)
                            ))]
 
+def get_subdirectories(dir_path):
+    import glob
+    sub_directories = [sub_d for sub_d in glob.glob( '%s\\*\\' % dir_path ) if not dirname_of(sub_d).startswith('_')]
+    return sub_directories
+
+def dirname_of(dir_path):
+    m = re.findall(r"[/\\]([^/\\]+(?:[\\/]+)?)$", dir_path)
+    if m:
+        return m[0]
+    else:
+        None
+
+def filename_of(path):
+    m = re.findall(r"[/\\]([^/\\]+)$", path)
+    if m:
+        return m[0]
+    else:
+        None
+
+def modulename_of(path):
+    return re.findall(r"[/\\]([^/\\]+)\.py$", path)[0]
+
+def execute_script(path):
+    import imp
+    imp.load_source(modulename_of(path), path)
+def render_menus(layout, current_directory):
+    dirs = get_subdirectories(current_directory)
+    files = get_external_scripts(current_directory)
+
+    for dir in dirs:
+        dir_name = dirname_of(dir)
+        InnerMenus.make(layout, dir, dir_name)
+    for path in files:
+        layout.operator(SubMenu.bl_idname, text = filename_of(path) or path ).script_path = path
+
 class ExternalScriptExecuter(bpy.types.Operator):
     bl_label = "External Script Executer"
     bl_idname = "external_script_executer.call_esesubmenu"
@@ -43,22 +78,22 @@ class ExternalScriptExecuterMenu(Menu):
     def draw(self, context):
         layout = self.layout
 
+        InnerMenus.init()
+
+        addon_prefs = context.user_preferences.addons[__name__].preferences
+        dir_root = addon_prefs.external_script_directory_root
+        render_menus(layout, dir_root)
+        return
+        for i in range(LIMIT):
+            InnerMenus.make(layout, 'a%d'%i, 'test%d'%i)
+        return
+
         addon_prefs = context.user_preferences.addons[__name__].preferences
         dir_root = addon_prefs.external_script_directory_root
 
         script_files = get_external_scripts(dir_root)
         for path in script_files:
-            layout.operator(SubMenu.bl_idname, text = filename(path) or path ).script_path = path
-
-def filename(path):
-    m = re.findall(r"[/\\]([^/\\]+)$", path)
-    if m:
-        return m[0]
-    else:
-        None
-
-def modulename(path):
-    return re.findall(r"[/\\]([^/\\]+)\.py$", path)[0]
+            layout.operator(SubMenu.bl_idname, text = filename_of(path) or path ).script_path = path
 
 class SubMenu(bpy.types.Operator):
     bl_idname = "external_script_executer.esesubmenu"
@@ -81,9 +116,81 @@ class ESE_AddonPreferences(bpy.types.AddonPreferences):
         layout = self.layout
         layout.prop(self, "external_script_directory_root")
 
-def execute_script(path):
-    import imp
-    imp.load_source(modulename(path), path)
+def menu_draw_common(self):
+    layout = self.layout
+    current_directory = self.value
+    render_menus(layout, current_directory)
+
+class A(Menu):
+    bl_label = 'foolish submenu resolvers'; value = 0
+    def draw(self, context): menu_draw_common(self)
+class InnerMenu0(A):pass
+class InnerMenu1(A):pass
+class InnerMenu2(A):pass
+class InnerMenu3(A):pass
+class InnerMenu4(A):pass
+class InnerMenu5(A):pass
+class InnerMenu6(A):pass
+class InnerMenu7(A):pass
+class InnerMenu8(A):pass
+class InnerMenu9(A):pass
+class InnerMenu10(A):pass
+class InnerMenu11(A):pass
+class InnerMenu12(A):pass
+class InnerMenu13(A):pass
+class InnerMenu14(A):pass
+class InnerMenu15(A):pass
+class InnerMenu16(A):pass
+class InnerMenu17(A):pass
+class InnerMenu18(A):pass
+class InnerMenu19(A):pass
+class InnerMenu20(A):pass
+class InnerMenu21(A):pass
+class InnerMenu22(A):pass
+class InnerMenu23(A):pass
+class InnerMenu24(A):pass
+class InnerMenu25(A):pass
+class InnerMenu26(A):pass
+class InnerMenu27(A):pass
+class InnerMenu28(A):pass
+class InnerMenu29(A):pass
+class InnerMenu30(A):pass
+class InnerMenu31(A):pass
+class InnerMenu32(A):pass
+class InnerMenu33(A):pass
+class InnerMenu34(A):pass
+class InnerMenu35(A):pass
+class InnerMenu36(A):pass
+class InnerMenu37(A):pass
+class InnerMenu38(A):pass
+class InnerMenu39(A):pass
+class InnerMenu40(A):pass
+class InnerMenu41(A):pass
+class InnerMenu42(A):pass
+class InnerMenu43(A):pass
+class InnerMenu44(A):pass
+class InnerMenu45(A):pass
+class InnerMenu46(A):pass
+class InnerMenu47(A):pass
+class InnerMenu48(A):pass
+class InnerMenu49(A):pass
+LIMIT=50
+
+class InnerMenus:
+    index=0
+
+    @classmethod
+    def init(cls):
+        cls.index = 0
+
+    @classmethod
+    def make(cls, layout, value, text = ''):
+        if cls.index >= LIMIT:
+            raise Exception('ESE sub directories reached limit.')
+        menu_class_name = "InnerMenu%d" % cls.index
+        globals()[ menu_class_name ].value = value
+        layout.menu(menu_class_name, text=text)
+        cls.index += 1
 
 def register():
     bpy.utils.register_module(__name__)
