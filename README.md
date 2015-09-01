@@ -1,4 +1,4 @@
-## blender-addon-external-script-executer
+## Blender Addon: External Script Executer
 
 指定したディレクトリ内にあるBlender用スクリプトファイルをメニューで一覧表示し、選択したスクリプトを実行します。  
 主にアドオンにするほどではない小さな処理を書いたスクリプトを簡単に実行するために使います。
