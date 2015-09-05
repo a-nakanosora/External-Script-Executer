@@ -1,7 +1,7 @@
 bl_info = {
     "name": "External Script Executer",
     "author": "a nakanosora",
-    "version": (0, 2, 0),
+    "version": (0, 3, 0),
     "blender": (2, 72, 2),
     "location": "Key Input -> Window -> External Script Executer (default: Shift+Ctrl+W)",
     "warning": "",
@@ -62,11 +62,33 @@ def render_menus(layout, current_directory):
 
 class ExternalScriptExecuter(bpy.types.Operator):
     bl_label = "External Script Executer"
-    bl_idname = "external_script_executer.call_esesubmenu"
+    bl_idname = "external_script_executer.main_operator"
+
+    oneshot_scriptfile_path = bpy.props.StringProperty(name="Script File Path", description="Relative Path from Root Directory", default="")
 
     def execute(self, context):
+        if self.oneshot_scriptfile_path:
+            self.execute_script_by_relpath(context, self.oneshot_scriptfile_path )
+            return {'FINISHED'}
+
         bpy.ops.wm.call_menu(name='ExternalScriptExecuterMenu')
         return {'FINISHED'}
+
+    def execute_script_by_relpath(self, context, script_relpath):
+        addon_prefs = context.user_preferences.addons[__name__].preferences
+        dir_root = addon_prefs.external_script_directory_root
+
+        if not re.search(r"[/\\]$", dir_root):
+            dir_root += '/'
+
+        script_path = dir_root + script_relpath
+        if not os.path.exists(script_path):
+            self.report({'ERROR'}, 'file not found: %s' % script_path)
+            return
+        if os.path.isdir(script_path):
+            self.report({'ERROR'}, 'the path is a directory, not file: %s' % script_path)
+            return
+        execute_script(script_path)
 
 class ExternalScriptExecuterMenu(Menu):
     bl_label = "External Script Executer"
